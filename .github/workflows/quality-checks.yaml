@@ -4,10 +4,16 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   quality-checks:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -30,11 +36,22 @@ jobs:
       - name: Type check with mypy
         run: uv run mypy . --strict --ignore-missing-imports
 
-      - name: Install FFMPEG
+      - name: Install FFMPEG (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt update
           sudo apt install -y ffmpeg
           ffmpeg -version
+
+      - name: Install FFMPEG (Windows)
+        if: runner.os == 'Windows'
+        uses: FedericoCarboni/setup-ffmpeg@v3.1
+        id: setup-ffmpeg
+        with:
+          ffmpeg-version: release
+          architecture: ''
+          linking-type: static
+          github-token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
 
       - name: Run tests
         run: uv run pytest
