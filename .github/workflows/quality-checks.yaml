@@ -36,7 +36,15 @@ jobs:
       - name: Type check with mypy
         run: uv run mypy . --strict --ignore-missing-imports
 
-      - name: Install FFMPEG
+      - name: Install FFMPEG (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install -y ffmpeg
+          ffmpeg -version
+
+      - name: Install FFMPEG (Windows)
+        if: runner.os == 'Windows'
         uses: FedericoCarboni/setup-ffmpeg@v3.1
         id: setup-ffmpeg
         with:
